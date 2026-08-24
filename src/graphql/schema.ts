@@ -1,4 +1,12 @@
 import {
+  validateBookmarkTitle,
+  validateBookmarkUrl,
+  validateFolderId,
+} from "../validation/bookmark.validation";
+
+import { validateFolderName } from "../validation/folder.validation";
+
+import {
   GraphQLID,
   GraphQLList,
   GraphQLNonNull,
@@ -173,8 +181,10 @@ const MutationType = new GraphQLObjectType({
       },
 
       resolve: (_source, args: { name: string }) => {
-        return createFolder(args.name);
-      },
+  const name = validateFolderName(args.name);
+
+  return createFolder(name);
+},
     },
 
     deleteFolder: {
@@ -222,12 +232,16 @@ const MutationType = new GraphQLObjectType({
           folderId: string;
         },
       ) => {
-        return createBookmark({
-          title: args.title,
-          url: args.url,
-          tags: args.tags,
-          folderId: args.folderId,
-        });
+        const title = validateBookmarkTitle(args.title);
+const url = validateBookmarkUrl(args.url);
+const folderId = validateFolderId(args.folderId);
+
+return createBookmark({
+  title,
+  url,
+  tags: args.tags,
+  folderId,
+});
       },
     },
 
@@ -256,23 +270,42 @@ const MutationType = new GraphQLObjectType({
         },
       },
 
+      
       resolve: (
-        _source,
-        args: {
-          id: string;
-          title?: string;
-          url?: string;
-          tags?: string[];
-          folderId?: string;
-        },
-      ) => {
-        return updateBookmark(args.id, {
-          title: args.title,
-          url: args.url,
-          tags: args.tags,
-          folderId: args.folderId,
-        });
-      },
+  _source,
+  args: {
+    id: string;
+    title?: string;
+    url?: string;
+    tags?: string[];
+    folderId?: string;
+  },
+) => {
+  const updateData: {
+    title?: string;
+    url?: string;
+    tags?: string[];
+    folderId?: string;
+  } = {};
+
+  if (args.title !== undefined) {
+    updateData.title = validateBookmarkTitle(args.title);
+  }
+
+  if (args.url !== undefined) {
+    updateData.url = validateBookmarkUrl(args.url);
+  }
+
+  if (args.tags !== undefined) {
+    updateData.tags = args.tags;
+  }
+
+  if (args.folderId !== undefined) {
+    updateData.folderId = validateFolderId(args.folderId);
+  }
+
+  return updateBookmark(args.id, updateData);
+},
     },
 
     deleteBookmark: {
@@ -296,3 +329,4 @@ export const schema = new GraphQLSchema({
   query: QueryType,
   mutation: MutationType,
 });
+

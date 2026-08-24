@@ -353,3 +353,215 @@ describe("GraphQL API", () => {
     expect(deletedBookmark).toBeNull();
   });
 });
+
+  test("rejects an empty folder name", async () => {
+    const result = await graphql({
+      schema,
+      source: `
+        mutation {
+          createFolder(name: "   ") {
+            id
+            name
+          }
+        }
+      `,
+    });
+
+    expect(result.errors).toBeDefined();
+    expect(result.errors?.[0]?.message).toBe(
+      "Folder name cannot be empty.",
+    );
+  });
+
+  test("rejects an empty bookmark title", async () => {
+    const folder = await prisma.folder.create({
+      data: {
+        name: "Development",
+      },
+    });
+
+    const result = await graphql({
+      schema,
+      source: `
+        mutation CreateBookmark(
+          $title: String!
+          $url: String!
+          $folderId: ID!
+        ) {
+          createBookmark(
+            title: $title
+            url: $url
+            folderId: $folderId
+          ) {
+            id
+          }
+        }
+      `,
+      variableValues: {
+        title: "   ",
+        url: "https://example.com",
+        folderId: folder.id,
+      },
+    });
+
+    expect(result.errors).toBeDefined();
+    expect(result.errors?.[0]?.message).toBe(
+      "Bookmark title cannot be empty.",
+    );
+  });
+
+  test("rejects an invalid bookmark URL", async () => {
+    const folder = await prisma.folder.create({
+      data: {
+        name: "Development",
+      },
+    });
+
+    const result = await graphql({
+      schema,
+      source: `
+        mutation CreateBookmark(
+          $title: String!
+          $url: String!
+          $folderId: ID!
+        ) {
+          createBookmark(
+            title: $title
+            url: $url
+            folderId: $folderId
+          ) {
+            id
+          }
+        }
+      `,
+      variableValues: {
+        title: "Invalid Bookmark",
+        url: "not-a-url",
+        folderId: folder.id,
+      },
+    });
+
+    expect(result.errors).toBeDefined();
+    expect(result.errors?.[0]?.message).toBe(
+      "Bookmark URL must be a valid URL.",
+    );
+  });
+
+  test("rejects unsupported bookmark URL protocols", async () => {
+    const folder = await prisma.folder.create({
+      data: {
+        name: "Development",
+      },
+    });
+
+    const result = await graphql({
+      schema,
+      source: `
+        mutation CreateBookmark(
+          $title: String!
+          $url: String!
+          $folderId: ID!
+        ) {
+          createBookmark(
+            title: $title
+            url: $url
+            folderId: $folderId
+          ) {
+            id
+          }
+        }
+      `,
+      variableValues: {
+        title: "Unsafe Bookmark",
+        url: "javascript:alert(1)",
+        folderId: folder.id,
+      },
+    });
+
+    expect(result.errors).toBeDefined();
+    expect(result.errors?.[0]?.message).toBe(
+      "Bookmark URL must use HTTP or HTTPS.",
+    );
+  });
+
+  test("rejects an empty bookmark folder ID", async () => {
+    const result = await graphql({
+      schema,
+      source: `
+        mutation CreateBookmark(
+          $title: String!
+          $url: String!
+          $folderId: ID!
+        ) {
+          createBookmark(
+            title: $title
+            url: $url
+            folderId: $folderId
+          ) {
+            id
+          }
+        }
+      `,
+      variableValues: {
+        title: "Test Bookmark",
+        url: "https://example.com",
+        folderId: "   ",
+      },
+    });
+
+    expect(result.errors).toBeDefined();
+    expect(result.errors?.[0]?.message).toBe(
+      "Folder ID cannot be empty.",
+    );
+  });
+
+    test("rejects an invalid URL when updating a bookmark", async () => {
+    const folder = await prisma.folder.create({
+      data: {
+        name: "Development",
+      },
+    });
+
+    const bookmark = await prisma.bookmark.create({
+      data: {
+        title: "Valid Bookmark",
+        url: "https://example.com",
+        folderId: folder.id,
+      },
+    });
+
+    const result = await graphql({
+      schema,
+      source: `
+        mutation UpdateBookmark(
+          $id: ID!
+          $url: String
+        ) {
+          updateBookmark(
+            id: $id
+            url: $url
+          ) {
+            id
+            url
+          }
+        }
+      `,
+      variableValues: {
+        id: bookmark.id,
+        url: "not-a-url",
+      },
+    });
+
+    expect(result.errors).toBeDefined();
+    expect(result.errors?.[0]?.message).toBe(
+      "Bookmark URL must be a valid URL.",
+    );
+
+    const unchangedBookmark = await prisma.bookmark.findUnique({
+      where: {
+        id: bookmark.id,
+      },
+    });
+
+    expect(unchangedBookmark?.url).toBe("https://example.com");
+  });
