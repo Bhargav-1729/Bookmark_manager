@@ -1,10 +1,10 @@
-// Prisma schema for the Bookmark Manager.
-//
-// The application has a simple parent-child relationship:
-//
-// Folder 1 ───── * Bookmark
-//
-// Every bookmark belongs to exactly one folder.
+ // Prisma schema for the Bookmark Manager.
+ //
+ // The application has a simple parent-child relationship:
+ //
+ // Folder 1 ----- * Bookmark
+ //
+ // Every bookmark belongs to exactly one folder.
 
 generator client {
   provider = "prisma-client-js"
@@ -55,6 +55,7 @@ model Bookmark {
 
   // Supports folder-based queries and later cursor pagination.
   @@index([folderId, createdAt])
+
   // Supports queries ordered by creation time.
   @@index([createdAt])
 }
