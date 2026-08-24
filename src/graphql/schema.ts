@@ -21,14 +21,14 @@ import {
   getBookmarkById,
   listBookmarksByFolder,
   updateBookmark,
-} from "../repositories/bookmark.repository";
+} from "../services/bookmark.service";
 
 import {
   createFolder,
   deleteFolder,
   getFolderById,
   listFolders,
-} from "../repositories/folder.repository";
+} from "../services/folder.service";
 
 /**
  * GraphQL representation of a Bookmark.
