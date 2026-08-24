@@ -1,0 +1,60 @@
+// Prisma schema for the Bookmark Manager.
+//
+// The application has a simple parent-child relationship:
+//
+// Folder 1 ───── * Bookmark
+//
+// Every bookmark belongs to exactly one folder.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Folder {
+  // Unique identifier for the folder.
+  id String @id @default(uuid())
+
+  // Human-readable folder name.
+  name String
+
+  // Automatically records when the folder was created.
+  createdAt DateTime @default(now())
+
+  // One folder can contain many bookmarks.
+  bookmarks Bookmark[]
+
+  // Supports queries ordered by creation time.
+  @@index([createdAt])
+}
+
+model Bookmark {
+  // Unique identifier for the bookmark.
+  id String @id @default(uuid())
+
+  // Display title of the bookmark.
+  title String
+
+  // URL that the bookmark points to.
+  url String
+
+  // Tags associated with the bookmark.
+  tags String[] @default([])
+
+  // Foreign key referencing the parent folder.
+  folderId String
+
+  // Relationship between Bookmark and Folder.
+  folder Folder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+
+  // Automatically records when the bookmark was created.
+  createdAt DateTime @default(now())
+
+  // Supports folder-based queries and later cursor pagination.
+  @@index([folderId, createdAt])
+  // Supports queries ordered by creation time.
+  @@index([createdAt])
+}
