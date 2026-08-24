@@ -4,12 +4,12 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun --watch index.ts",
-    "start": "bun index.ts",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
-    "test": "bun test"
-  },
+  "dev": "bun --watch src/graphql/server.ts",
+  "start": "bun src/graphql/server.ts",
+  "test": "bun test",
+  "typecheck": "tsc --noEmit",
+  "lint": "eslint ."
+},
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/bun": "^1.4.0",
